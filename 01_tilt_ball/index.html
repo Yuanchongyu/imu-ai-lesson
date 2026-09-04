@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>倾斜滚球 · IMU开场秀</title>
+<title>Tilt Ball · IMU Warm-up</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{
@@ -11,12 +11,12 @@
     --line:#C7D0C8; --accent:#9C6F27; --accent-soft:#F1E4C8; --accent-strong:#7A5A20;
     --granted:#3E7A54; --granted-soft:#DEEBE2;
     --denied:#A5493A;
-    --font-cjk:'PingFang SC','Microsoft YaHei UI','Noto Sans SC','Hiragino Sans GB',sans-serif;
+    --font-ui:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     --font-mono:'Cascadia Code','SF Mono','JetBrains Mono',Consolas,monospace;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; font-family:var(--font-cjk); background:var(--paper); color:var(--ink);
+    margin:0; font-family:var(--font-ui); background:var(--paper); color:var(--ink);
     padding:24px; -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:560px; margin:0 auto; text-align:center;}
@@ -47,23 +47,23 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>🎱 倾斜滚球</h1>
-  <p class="sub">拿起板子往哪边歪，球就往哪边滚——把板子当成一个托盘。撞到金色终点就赢。</p>
+  <h1>🎱 Tilt Ball</h1>
+  <p class="sub">Tilt the board and the ball rolls that way — like holding a tray. Reach the gold goal to win.</p>
 
   <div class="card">
-    <button class="btn-primary" id="connectBtn" onclick="connectSerial()">🔌 连接 XIAO 板子，开始玩</button>
+    <button class="btn-primary" id="connectBtn" onclick="connectSerial()">🔌 Connect XIAO board</button>
     <span id="connectStatus"></span>
     <div id="connectError"></div>
     <canvas id="gameCanvas" width="500" height="500"></canvas>
-    <div class="status" id="statusText">连接板子后，慢慢倾斜它试试看</div>
-    <button class="btn-ghost" style="margin-top:10px;" onclick="resetBall()">重新开始</button>
+    <div class="status" id="statusText">Connect the board, then tilt it slowly and see what happens</div>
+    <button class="btn-ghost" style="margin-top:10px;" onclick="resetBall()">Start over</button>
   </div>
 </div>
 
 <script>
 if(location.protocol === 'file:'){
   document.body.insertAdjacentHTML('afterbegin',
-    '<div style="background:#A5493A;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;line-height:1.6;">⚠️ 检测到这个页面是直接双击打开的（file://），Web Serial 在这种情况下连不上设备。请通过本地服务器或 GitHub Pages 打开，例如在这个文件夹里运行 <code>python3 -m http.server 8000</code>，然后浏览器访问 http://localhost:8000</div>'
+    '<div style="background:#A5493A;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;line-height:1.6;">⚠️ This page was opened directly as a file (file://). Web Serial cannot reach the device that way. Open it through GitHub Pages, or run <code>python3 -m http.server 8000</code> in this folder and visit http://localhost:8000</div>'
   );
 }
 
@@ -72,22 +72,22 @@ const $ = id => document.getElementById(id);
 // ---------------- serial connection ----------------
 let port = null;
 let keepReading = true;
-let tiltX = 0, tiltY = 0; // 最新的倾斜读数（来自加速度计x/y）
+let tiltX = 0, tiltY = 0; // latest tilt readings from the accelerometer
 
 async function connectSerial(){
   if(!('serial' in navigator)){
-    $('connectError').innerHTML = '<div class="error-box">这个浏览器不支持Web Serial，请换Chrome或Edge浏览器打开这个页面。</div>';
+    $('connectError').innerHTML = '<div class="error-box">This browser does not support Web Serial. Please open this page in Chrome or Edge.</div>';
     return;
   }
   try{
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
-    $('connectStatus').innerHTML = ' <span style="color:#3E7A54;font-weight:600;">✓ 已连接，开始倾斜吧！</span>';
+    $('connectStatus').innerHTML = ' <span style="color:#3E7A54;font-weight:600;">✓ Connected — start tilting!</span>';
     $('connectBtn').disabled = true;
     readLoop();
     requestAnimationFrame(tick);
   }catch(err){
-    $('connectError').innerHTML = `<div class="error-box">连接失败：${err.message}</div>`;
+    $('connectError').innerHTML = `<div class="error-box">Could not connect: ${err.message}</div>`;
   }
 }
 
@@ -112,7 +112,7 @@ function handleLine(line){
   if(parts.length !== 3) return;
   const x = parseFloat(parts[0]), y = parseFloat(parts[1]);
   if(Number.isNaN(x) || Number.isNaN(y)) return;
-  // 板子平放时 x,y 接近0；往某个方向歪，对应轴的读数会朝1靠近
+  // Lying flat, x and y read near 0. Tilt one way and that axis climbs toward 1.
   tiltX = x;
   tiltY = y;
 }
@@ -128,7 +128,7 @@ const goal = { x: 420, y: 90 };
 let ball = { x: 80, y: 410, vx: 0, vy: 0 };
 let won = false;
 
-// 一些简单的墙（矩形），做出一点"迷宫"的感觉
+// A couple of walls to make it feel like a small maze
 const walls = [
   { x: 160, y: 0,   w: 20, h: 340 },
   { x: 320, y: 160, w: 20, h: 340 },
@@ -138,7 +138,7 @@ function resetBall(){
   ball = { x: 80, y: 410, vx: 0, vy: 0 };
   won = false;
   $('statusText').className = 'status';
-  $('statusText').textContent = '连接板子后，慢慢倾斜它试试看';
+  $('statusText').textContent = 'Connect the board, then tilt it slowly and see what happens';
 }
 
 function circleRectCollide(cx, cy, r, rect){
@@ -150,23 +150,23 @@ function circleRectCollide(cx, cy, r, rect){
 
 function tick(){
   if(!won){
-    // 板子的 x,y 加速度读数（单位g）代表重力沿这两个轴的分量，
-    // 直接拿来当"这个方向的推力"，跟真实滚球托盘是同一个物理道理
+    // The x,y accelerometer readings (in g) are gravity's pull along those axes,
+    // so we can use them directly as a push — same physics as a real tilting tray.
     ball.vx += tiltX * 0.6;
     ball.vy += tiltY * 0.6;
-    ball.vx *= 0.94; // 摩擦力，不然球会越滚越快停不下来
+    ball.vx *= 0.94; // friction, otherwise the ball never slows down
     ball.vy *= 0.94;
 
     let nx = ball.x + ball.vx;
     let ny = ball.y + ball.vy;
 
-    // 边界反弹
+    // bounce off the edges
     if(nx < BALL_R){ nx = BALL_R; ball.vx *= -0.4; }
     if(nx > W-BALL_R){ nx = W-BALL_R; ball.vx *= -0.4; }
     if(ny < BALL_R){ ny = BALL_R; ball.vy *= -0.4; }
     if(ny > H-BALL_R){ ny = H-BALL_R; ball.vy *= -0.4; }
 
-    // 撞墙反弹（简单处理：分别检查x/y方向）
+    // bounce off the walls (check each axis separately)
     for(const w of walls){
       if(circleRectCollide(nx, ball.y, BALL_R, w)) { nx = ball.x; ball.vx *= -0.4; }
       if(circleRectCollide(ball.x, ny, BALL_R, w)) { ny = ball.y; ball.vy *= -0.4; }
@@ -178,7 +178,7 @@ function tick(){
     if(dGoal < GOAL_R){
       won = true;
       $('statusText').className = 'status win';
-      $('statusText').textContent = '🎉 到达终点！点"重新开始"再来一次';
+      $('statusText').textContent = '🎉 You made it! Hit "Start over" to play again';
     }
   }
 
@@ -188,15 +188,15 @@ function tick(){
 
 function draw(){
   ctx.clearRect(0,0,W,H);
-  // 墙
+  // walls
   ctx.fillStyle = '#8A959A';
   walls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
-  // 终点
+  // goal
   ctx.beginPath();
   ctx.fillStyle = '#D9A94F';
   ctx.arc(goal.x, goal.y, GOAL_R, 0, Math.PI*2);
   ctx.fill();
-  // 球
+  // ball
   ctx.beginPath();
   ctx.fillStyle = '#7A5A20';
   ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2);

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>数据可视化 · 动作变成了什么</title>
+<title>See The Data · What Your Motion Looks Like</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{
@@ -10,11 +10,11 @@
     --paper:#E9EDE9; --paper-raised:#FFFFFF; --paper-sunken:#DCE2DC;
     --line:#C7D0C8; --accent:#9C6F27; --accent-soft:#F1E4C8; --accent-strong:#7A5A20;
     --granted:#3E7A54; --denied:#A5493A;
-    --font-cjk:'PingFang SC','Microsoft YaHei UI','Noto Sans SC','Hiragino Sans GB',sans-serif;
+    --font-ui:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     --font-mono:'Cascadia Code','SF Mono','JetBrains Mono',Consolas,monospace;
   }
   *{box-sizing:border-box;}
-  body{ margin:0; font-family:var(--font-cjk); background:var(--paper); color:var(--ink); padding:24px; -webkit-font-smoothing:antialiased; }
+  body{ margin:0; font-family:var(--font-ui); background:var(--paper); color:var(--ink); padding:24px; -webkit-font-smoothing:antialiased; }
   .wrap{max-width:680px; margin:0 auto;}
   h1{font-size:26px; margin:0 0 4px;}
   .sub{color:var(--ink-soft); font-size:14px; margin:0 0 20px;}
@@ -39,35 +39,35 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>📈 动作变成了什么？</h1>
-  <p class="sub">刚才你用手感觉到了"歪一下、球就滚一下"。现在我们打开电脑的眼睛，看看这个"歪一下"在电脑里到底长什么样——原来就是几个不停跳动的数字。</p>
+  <h1>📈 What does motion look like?</h1>
+  <p class="sub">You just felt it with your hands — tilt the board, the ball rolls. Now let's open the computer's eyes and see what that tilt actually looks like inside: it's just a few numbers, jumping around.</p>
 
   <div class="card">
-    <button class="btn-primary" id="connectBtn" onclick="connectSerial()">🔌 连接 XIAO 板子</button>
+    <button class="btn-primary" id="connectBtn" onclick="connectSerial()">🔌 Connect XIAO board</button>
     <span id="connectStatus"></span>
     <div id="connectError"></div>
   </div>
 
   <div class="card">
     <div class="readout">
-      <div class="box"><div class="v" id="valX" style="color:#A5493A;">0.00</div><div class="k">X 轴</div></div>
-      <div class="box"><div class="v" id="valY" style="color:#3E7A54;">0.00</div><div class="k">Y 轴</div></div>
-      <div class="box"><div class="v" id="valZ" style="color:#2B5D8C;">0.00</div><div class="k">Z 轴</div></div>
+      <div class="box"><div class="v" id="valX" style="color:#A5493A;">0.00</div><div class="k">X axis</div></div>
+      <div class="box"><div class="v" id="valY" style="color:#3E7A54;">0.00</div><div class="k">Y axis</div></div>
+      <div class="box"><div class="v" id="valZ" style="color:#2B5D8C;">0.00</div><div class="k">Z axis</div></div>
     </div>
     <canvas id="liveChart" height="180" style="margin-top:16px;"></canvas>
     <div class="legend">
-      <span><i style="background:#A5493A;"></i>X（左右）</span>
-      <span><i style="background:#3E7A54;"></i>Y（前后）</span>
-      <span><i style="background:#2B5D8C;"></i>Z（上下）</span>
+      <span><i style="background:#A5493A;"></i>X (left / right)</span>
+      <span><i style="background:#3E7A54;"></i>Y (front / back)</span>
+      <span><i style="background:#2B5D8C;"></i>Z (up / down)</span>
     </div>
-    <div class="hint">板子平放不动时，Z轴大约是1、X和Y轴大约是0——那是地球重力一直往下拉着它。试试把板子立起来、翻过来，看看哪条线变了。</div>
+    <div class="hint">Lying flat and still, Z reads about 1 while X and Y read about 0 — that's Earth's gravity pulling down on it the whole time. Try standing the board on its edge, or flipping it over, and watch which line moves.</div>
   </div>
 </div>
 
 <script>
 if(location.protocol === 'file:'){
   document.body.insertAdjacentHTML('afterbegin',
-    '<div style="background:#A5493A;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;line-height:1.6;">⚠️ 检测到这个页面是直接双击打开的（file://），Web Serial 在这种情况下连不上设备。请通过本地服务器或 GitHub Pages 打开，例如在这个文件夹里运行 <code>python3 -m http.server 8000</code>，然后浏览器访问 http://localhost:8000</div>'
+    '<div style="background:#A5493A;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;line-height:1.6;">⚠️ This page was opened directly as a file (file://). Web Serial cannot reach the device that way. Open it through GitHub Pages, or run <code>python3 -m http.server 8000</code> in this folder and visit http://localhost:8000</div>'
   );
 }
 
@@ -78,17 +78,17 @@ const HISTORY_CAP = 250;
 
 async function connectSerial(){
   if(!('serial' in navigator)){
-    $('connectError').innerHTML = '<div class="error-box">这个浏览器不支持Web Serial，请换Chrome或Edge浏览器打开这个页面。</div>';
+    $('connectError').innerHTML = '<div class="error-box">This browser does not support Web Serial. Please open this page in Chrome or Edge.</div>';
     return;
   }
   try{
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
-    $('connectStatus').innerHTML = ' <span style="color:#3E7A54;font-weight:600;">✓ 已连接</span>';
+    $('connectStatus').innerHTML = ' <span style="color:#3E7A54;font-weight:600;">✓ Connected</span>';
     $('connectBtn').disabled = true;
     readLoop();
   }catch(err){
-    $('connectError').innerHTML = `<div class="error-box">连接失败：${err.message}</div>`;
+    $('connectError').innerHTML = `<div class="error-box">Could not connect: ${err.message}</div>`;
   }
 }
 
